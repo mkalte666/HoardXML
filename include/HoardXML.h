@@ -22,7 +22,7 @@ public:
 	//constructor: Tag
 	//note: Creates an empty Tag
 	Tag() 
-	: name(""), isSingleTag(false) 
+	: name(""), isEmptyTag(false) 
 	{
 	
 	}
@@ -31,7 +31,7 @@ public:
 	//note: Creates an Tag with the name "tagName"
 	//param: name: name of the new Tag
 	Tag(std::string tagName) 
-	: name(tagName), isSingleTag(false)
+	: name(tagName), isEmptyTag(false)
 	{
 		
 	}
@@ -41,7 +41,7 @@ public:
 	//param: 	name: name of the new Tag
 	//		toParse: the string to parse into the tag. 
 	Tag(std::string tagName, std::string toParse) 
-	: name(tagName), isSingleTag(false)
+	: name(tagName), isEmptyTag(false)
 	{
 		//_ParseData(toParse);
 	}
@@ -118,11 +118,11 @@ public:
 	//note: Sets this tag to be witout data and children. 
 	//note: it will be Serialized as <name [attributes]\>. 
 	//note: SETTING TO TRUE ERASES ALL DATA AND CHILD ELEMENTS!
-	//param:	b: Parameter to set isSingleTag to.
-	void SetSingleTag(bool b)
+	//param:	b: Parameter to set isEmptyTag to.
+	void SetEmptyTag(bool b)
 	{
-		isSingleTag = b;
-		if(isSingleTag) {
+		isEmptyTag = b;
+		if(isEmptyTag) {
 			data = "";
 			children.clear();
 		}
@@ -130,9 +130,9 @@ public:
 
 	//function: GetSingleTag
 	//note: Returns if this tag is stand-alone without data and children 
-	bool GetSingleTag() 
+	bool GetEmptyTag() 
 	{
-		return isSingleTag;
+		return isEmptyTag;
 	}
 	
 
@@ -158,7 +158,7 @@ public:
 		for (auto elem = attributes.begin(); elem!=attributes.end(); elem++) {
 			result += elem->first+std::string("=\"")+elem->second+std::string("\" ");
 		}
-		if(isSingleTag) {
+		if(isEmptyTag) {
 			result+=std::string("/>\n");
 			return result;
 		}
@@ -289,8 +289,8 @@ private:
 	std::map<std::string, std::string> attributes;
 	//var: children. Holds the children of this tag. 
 	std::vector<Tag> children;
-	//var: isSingleTag. Holds if it is a single tag without data. 
-	bool isSingleTag;
+	//var: isEmptyTag. Holds if it is a single tag without data. 
+	bool isEmptyTag;
 	
 
 };

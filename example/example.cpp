@@ -54,7 +54,7 @@ int main(int argc, char**argv)
 	//the rest here basically is stuff you can see above, used for testing
 
 	HoardXML::Tag t4("single");
-	t4.SetSingleTag(true);
+	t4.SetEmptyTag(true);
 	t4.SetAttribute("morning", "true");
 	t1.AddChild(t4);
 	std::cout << "_-_-_-_-_-_-_-_-__-_-_-_----_--_-" << std::endl;
