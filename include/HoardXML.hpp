@@ -168,7 +168,9 @@ public:
 			for (Tag t : children) {
 				result+=t.Serialize(depth+1);
 			}
-			result += tabs+data+std::string("\n")+tabs;
+			if(data!="") {
+				result += tabs+data+std::string("\n")+tabs;
+			}
 		}
 		else {
 			result+=data;
@@ -205,7 +207,7 @@ public:
 		}
 		return resultlist;
 	}
-	
+
 	//function: Load
 	//note: Loads tag-content into this tag
 	//param: 	toParse: data to parse
@@ -213,19 +215,16 @@ public:
 	{
 		static std::regex completeTagRE("(<\\s*/*\\s*[\\w-]*\\s*[^<&>]*>)");
 		std::smatch m;
-		std::cout << "TP:" << toParse << std::endl;
 		while(std::regex_search(toParse,m,completeTagRE)) {
 			Tag newTag = _ParseTag(m[1]);
-			std::cout << m[1] << std::endl;
 			//tag is invalid? remove and handle next
 			if(newTag.GetName()=="") {
-				toParse = m.suffix().str();
-				std::cout << "blahrgl" << std::endl;
+				toParse = m.prefix().str()+m.suffix().str();	
 				continue;
 			}
 			//its a tag without content? add as child, remove and handle next
 			if(newTag.GetSingleTag()) {
-				toParse = m.suffix().str();
+				toParse = m.prefix().str()+m.suffix().str();
 				AddChild(newTag);
 				continue;
 			}
@@ -235,16 +234,21 @@ public:
 			//Get the data inside of the tag. dont panic if we cant find an end tag. if we cant, it will be handeld as a tag without content.
 			if(std::regex_search(toParse, m2, thisTagRegex)) {
 				newTag.Load(m2[2]);
-				toParse = m2.suffix().str();
+				toParse = m2.prefix().str()+m2.suffix().str();
 			} else {
-				toParse = m.suffix().str();
+				toParse = m.prefix().str()+m.suffix().str();
 			}
 			AddChild(newTag);
 		}
 		//Everything that survived the stuff above must be data
-		SetData(toParse);
+		SetData(_ProcessData(toParse));
 	}
-	
+
+protected:
+
+	//function: _ParseTag
+	//note: Parses a tag, meaning the "<tagfoo>"-sequence to extract attributes
+	//param:	toParse: the data to  parse 	
 	static Tag _ParseTag(std::string toParse)
 	{
 		static std::regex tagRE("<\\s*([\\w-]*)\\s*([^<&>]*)>");
@@ -266,6 +270,16 @@ public:
 		}
 		return Tag();
 	}
+
+	//function: _ProcessData
+	//note: Removes every not wanted character and replaces replacement characters. 
+	//param:	toParse: string to process
+	static std::string _ProcessData(std::string toParse)
+	{
+		static std::regex spaceRE("([\\s])[\\s]+");
+		
+		return std::regex_replace(toParse, spaceRE, "");
+	}
 private:
 	//var: name. Holds the name of this tag. 
 	std::string name;
@@ -277,7 +291,6 @@ private:
 	std::vector<Tag> children;
 	//var: isSingleTag. Holds if it is a single tag without data. 
 	bool isSingleTag;
-protected:
 	
 
 };
