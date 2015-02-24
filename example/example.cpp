@@ -4,7 +4,7 @@
 #include <string>
 #include <iostream>
 
-#include "../include/HoardXML.hpp"
+#include "../include/HoardXML.h"
 
 //function: main
 //note: contains the examples how to use the library. 
