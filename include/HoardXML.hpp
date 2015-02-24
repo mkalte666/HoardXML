@@ -48,7 +48,7 @@ public:
 
 	//destructor: ~Tag
 	//note: does not much since all subclasses are self-deliting
-	~Tag() 
+	virtual ~Tag() 
 	{
 		//nothing 
 	}
@@ -199,6 +199,64 @@ public:
 		}
 		return resultlist;
 	}
+	
+	//function: Load
+	//note: Loads tag-content into this tag
+	//param: 	toParse: data to parse
+	void Load(std::string toParse)
+	{
+		static std::regex completeTagRE("(<\\s*/*\\s*[\\w-]*\\s*[!-%'-;=?-~\\s]*>)");
+		std::smatch m;
+		while(std::regex_search(toParse,m,completeTagRE)) {
+			Tag newTag = _ParseTag(m[1]);
+			//tag is invalid? remove and handle next
+			if(newTag.GetName()=="") {
+				toParse = m.suffix().str();
+				continue;
+			}
+			//its a tag without content? add as child, remove and handle next
+			if(newTag.GetSingleTag()) {
+				toParse = m.suffix().str();
+				AddChild(newTag);
+				continue;
+			}
+			//this regex is generated so that it caputres the content between <name>[content]</name>
+			std::regex thisTagRegex(std::string("(")+m[1]+std::string(")([\\w\\W]*)(<\\s*\\/\\s*"+newTag.GetName()+std::string("\\s*>)"));
+			std::smatch m2;
+			//Get the data inside of the tag. dont panic if we cant find an end tag. if we cant, it will be handeld as a tag without content.
+			if(std::regex_search(toParse, m2, thisTagRegex)) {
+				newTag.Load(m2[2]);
+				toParse = m2.suffix().str();
+			} else {
+				toParse = m.suffix().str();
+			}
+			AddChild(newTag);
+		}
+		//Everything that survived the stuff above must be data
+		SetData(toParse);
+	}
+	
+	static _ParseTag(std::string toParse)
+	{
+		static std::regex tagRE("<\\s*([\\w-]*)\\s*([!-%'-;=?-~\\s]*)>");
+		static std::regex attributeRE("([\\w-]*)=\"([!#-%'-;=?-~\\s]*)\"");
+		static std::regex noContentRE("(/)");
+		std::smatch m;
+		if(std::regex_search(toParse,m,ragRE)) {
+			Tag newTag(m[1]);
+			std::string argsAndTypeString = m[2];
+			std::smatch m2:
+			while(std::regex_search(argsAndTypeString, m2, attributeRE)) {
+				newTag.SetAttribute(m[1], m[2]);
+				argsAndTypeString = m2.suffix().str();
+			}
+			if(std::regex_search(argsAndTypeString, m2, noContentRE)) {
+				newTag.SetSingleTag(true);
+			}
+			return newTag;
+		}
+		return Tag();
+	}
 private:
 	//var: name. Holds the name of this tag. 
 	std::string name;
@@ -214,5 +272,79 @@ protected:
 	
 
 };
+
+//class: Document
+//info: Document is the "root" tag of a xml. 	
+//		while you can do nearly everything with Tag itself, document manages saving, loading and other stuff for you. 
+//parent: Tag
+class Document : public Tag
+{
+public:
+	//constructor: Document
+	//note: Creates an empty document
+	Document() 
+	: saveToRaw(false)
+	{
+	
+	}
+	
+	//constructor: Document
+	//note: Creates an document form a file with name "filename". 
+	//		calling save without argbuments on this will save it to that exact file. 
+	//param: the file to load from and save to by name
+	Document(std::string filename)
+	: saveToRaw(false)
+	{
+		std::ifstream infile(filename);
+		std::string indata = std::string(std::istreambuf_iterator<char>(infile), std::istreambuf_iterator<char>());
+		Load(indata);
+	}
+	
+	//constructor: Document
+	//note: Creates an document form a file given
+	//		calling save without argbuments on this will save it to that exact file.
+	//param:	file: the file to load from and save to by std::fstream
+	Document(std::fstream file)
+	: saveToRaw(true)
+	{
+		std::string indata = std::string(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>());
+		Load(indata);
+	}
+	
+	//function: Save
+	//note: Saves a Document. Uses method intended by constructor
+	void Save() 
+	{
+		if(saveToRaw) {
+			Save(rawSavefile);
+		} else {
+			Save(savefile);
+		}
+	}
+	
+	//function: Save
+	//note: Saves a document to a file named by "filename"
+	//param: 	filename: file to save to
+	void Save(std::string filename)
+	{
+		std::fstream outfile(filename, std::ios::out);
+		Save(outfile);
+		outfile.close();
+	}
+	
+	//function: Save
+	//note: Saves a document to the given file
+	//param: 	outfile: the file to save to
+	void Save(std::fstream outfile)
+	{
+		outfile << Serialize();
+	}
+private:
+	std::string savefile;
+	std::fstream rawSavefile;
+	bool saveToRaw;
+protected:
+
+}
 
 }; //end of namespace HoardXML
