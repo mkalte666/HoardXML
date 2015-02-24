@@ -147,7 +147,7 @@ public:
 	//function: Serialize 
 	//note: serializes the tag and its subtags including the data into a xml-tree
 	//param:	depth: The depth of this operation. causes depth times '/t's added at the biginning to every line of the output 
-	std::string Serialize(int depth=0)
+	virtual std::string Serialize(int depth=0)
 	{
 		std::string tabs;
 		for (int i = 0; i<depth;i++) {
@@ -162,12 +162,18 @@ public:
 			result+=std::string("/>\n");
 			return result;
 		}
-		result+=std::string(">\n");
-		for (Tag t : children) {
-			result+=t.Serialize(depth+1);
+		result+=std::string(">");
+		if(children.size()!=0) {
+			result += "\n";
+			for (Tag t : children) {
+				result+=t.Serialize(depth+1);
+			}
+			result += tabs+data+std::string("\n")+tabs;
 		}
-		result += tabs+data+std::string("\n");
-		result+=tabs+std::string("</")+name+std::string(">\n");
+		else {
+			result+=data;
+		}
+		result+=std::string("</")+name+std::string(">\n");
 	}
 	
 	//operator: []
@@ -205,13 +211,16 @@ public:
 	//param: 	toParse: data to parse
 	void Load(std::string toParse)
 	{
-		static std::regex completeTagRE("(<\\s*/*\\s*[\\w-]*\\s*[!-%'-;=?-~\\s]*>)");
+		static std::regex completeTagRE("(<\\s*/*\\s*[\\w-]*\\s*[^<&>]*>)");
 		std::smatch m;
+		std::cout << "TP:" << toParse << std::endl;
 		while(std::regex_search(toParse,m,completeTagRE)) {
 			Tag newTag = _ParseTag(m[1]);
+			std::cout << m[1] << std::endl;
 			//tag is invalid? remove and handle next
 			if(newTag.GetName()=="") {
 				toParse = m.suffix().str();
+				std::cout << "blahrgl" << std::endl;
 				continue;
 			}
 			//its a tag without content? add as child, remove and handle next
@@ -221,7 +230,7 @@ public:
 				continue;
 			}
 			//this regex is generated so that it caputres the content between <name>[content]</name>
-			std::regex thisTagRegex(std::string("(")+m[1]+std::string(")([\\w\\W]*)(<\\s*\\/\\s*"+newTag.GetName()+std::string("\\s*>)"));
+			std::regex thisTagRegex(std::string("(")+m[1].str()+std::string(")([\\w\\W]*)(<\\s*\\/\\s*")+newTag.GetName()+std::string("\\s*>)"));
 			std::smatch m2;
 			//Get the data inside of the tag. dont panic if we cant find an end tag. if we cant, it will be handeld as a tag without content.
 			if(std::regex_search(toParse, m2, thisTagRegex)) {
@@ -236,18 +245,18 @@ public:
 		SetData(toParse);
 	}
 	
-	static _ParseTag(std::string toParse)
+	static Tag _ParseTag(std::string toParse)
 	{
-		static std::regex tagRE("<\\s*([\\w-]*)\\s*([!-%'-;=?-~\\s]*)>");
-		static std::regex attributeRE("([\\w-]*)=\"([!#-%'-;=?-~\\s]*)\"");
+		static std::regex tagRE("<\\s*([\\w-]*)\\s*([^<&>]*)>");
+		static std::regex attributeRE("([\\w-]*)=\"([^<&>=\"]*)\"");
 		static std::regex noContentRE("(/)");
 		std::smatch m;
-		if(std::regex_search(toParse,m,ragRE)) {
+		if(std::regex_search(toParse,m,tagRE)) {
 			Tag newTag(m[1]);
 			std::string argsAndTypeString = m[2];
-			std::smatch m2:
+			std::smatch m2;
 			while(std::regex_search(argsAndTypeString, m2, attributeRE)) {
-				newTag.SetAttribute(m[1], m[2]);
+				newTag.SetAttribute(m2[1], m2[2]);
 				argsAndTypeString = m2.suffix().str();
 			}
 			if(std::regex_search(argsAndTypeString, m2, noContentRE)) {
@@ -310,6 +319,25 @@ public:
 		std::string indata = std::string(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>());
 		Load(indata);
 	}
+
+	//function: Save
+	//note: Saves a document to the given file
+	//param: 	outfile: the file to save to
+	void Save(std::fstream &outfile)
+	{
+		outfile << Serialize();
+	}
+
+
+	//function: Save
+	//note: Saves a document to a file named by "filename"
+	//param: 	filename: file to save to
+	void Save(std::string filename)
+	{
+		std::fstream outfile(filename, std::ios::out);
+		Save(outfile);
+		outfile.close();
+	}
 	
 	//function: Save
 	//note: Saves a Document. Uses method intended by constructor
@@ -322,29 +350,25 @@ public:
 		}
 	}
 	
-	//function: Save
-	//note: Saves a document to a file named by "filename"
-	//param: 	filename: file to save to
-	void Save(std::string filename)
+	//functions: Serialize
+	//note: overloaded Tag::Serialize that serializes a document 
+	//param: 	depth: tabs to add in the beginning of each line
+	virtual std::string Serialize(int depth=0)
 	{
-		std::fstream outfile(filename, std::ios::out);
-		Save(outfile);
-		outfile.close();
+		std::string result;
+		for (Tag t : GetChildren()) {
+			result+=t.Serialize();
+		}
+		return result;
 	}
 	
-	//function: Save
-	//note: Saves a document to the given file
-	//param: 	outfile: the file to save to
-	void Save(std::fstream outfile)
-	{
-		outfile << Serialize();
-	}
+
 private:
 	std::string savefile;
 	std::fstream rawSavefile;
 	bool saveToRaw;
 protected:
 
-}
+};
 
 }; //end of namespace HoardXML

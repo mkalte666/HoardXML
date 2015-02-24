@@ -40,5 +40,23 @@ int main(int argc, char**argv)
 	//print it to see it
 	std::cout << t1.Serialize();
 
-		
+	//lets add all this to a Document and save it. 
+	HoardXML::Document d;
+	d.AddChild(t1);
+	d.Save("test.xml");
+
+	//and because we can, lets load it into another Document
+	std::cout << "\n\n\n"; 
+	HoardXML::Document d2("test.xml");
+	std::cout << "______________________________________" << std::endl;
+	std::cout << d2.Serialize() << std::endl;
+
+	//the rest here basically is stuff you can see above, used for testing
+
+	HoardXML::Tag t4("single");
+	t4.SetSingleTag(true);
+	t4.SetAttribute("morning", "true");
+	t1.AddChild(t4);
+	std::cout << "_-_-_-_-_-_-_-_-__-_-_-_----_--_-" << std::endl;
+	std::cout << t1.Serialize() << std::endl;		
 }
