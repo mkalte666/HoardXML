@@ -114,7 +114,7 @@ public:
 		return children;
 	}
 	
-	//function: SetSingleTag
+	//function: SetEmptyTag
 	//note: Sets this tag to be witout data and children. 
 	//note: it will be Serialized as <name [attributes]\>. 
 	//note: SETTING TO TRUE ERASES ALL DATA AND CHILD ELEMENTS!
@@ -264,7 +264,7 @@ protected:
 				argsAndTypeString = m2.suffix().str();
 			}
 			if(std::regex_search(argsAndTypeString, m2, noContentRE)) {
-				newTag.SetSingleTag(true);
+				newTag.SetEmptyTag(true);
 			}
 			return newTag;
 		}
