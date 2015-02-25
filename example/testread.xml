@@ -1,0 +1,11 @@
+<test>
+	<test2>
+		<foo w="a">
+			<foo>yx=y
+			</foo>
+		</foo>
+	</test2>
+	<test>
+
+	</test>
+</test>

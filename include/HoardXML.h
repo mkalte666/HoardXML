@@ -234,7 +234,7 @@ public:
 			std::string tagContent;
 			std::string tagSuffix;
 			//Get the data inside of the tag. dont panic if we cant find an end tag. if we cant, it will be handeld as a tag without content.
-			if(_TagContent(newTag.GetName(), m[1].suffix().str(), tagContent, tagSuffix)) {
+			if(_TagContent(newTag.GetName(), m.suffix().str(), tagContent, tagSuffix)) {
 				newTag.Load(tagContent);
 				toParse = m.prefix().str()+tagSuffix;
 			} else {
@@ -254,20 +254,22 @@ protected:
 		std::regex thisTagRE(std::string("<\\s*/*\\s*")+name+std::string("\\s*[^<&>]*>"));
 		std::regex isEndTagRE(std::string("<\\s*/\\s*")+name+std::string("\\s*>"));
 		std::smatch m;
+		std::string dumped;
 		while(std::regex_search(inSuffix,m,thisTagRE)) {
 			//fond a tag. increase tagCount by 1 if its a opening tag, decrese otherwise
 			std::smatch m2;
-			if(std::regex_search(m[0],m2,isEndTagRE)) {
+			if(std::regex_search(m[0].str(),m2,isEndTagRE)) {
 				tagCount--;
 			} 
 			else {
 				tagCount++;
 			}
 			if(tagCount<=0) {
-				outContent = m.prefix().str();
+				outContent = dumped+m.prefix().str();
 				outSuffix = m.suffix().str();
 				return true;
 			}
+			inSuffix = m.suffix().str();
 		}
 		return false;
 	}

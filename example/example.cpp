@@ -58,5 +58,10 @@ int main(int argc, char**argv)
 	t4.SetAttribute("morning", "true");
 	t1.AddChild(t4);
 	std::cout << "_-_-_-_-_-_-_-_-__-_-_-_----_--_-" << std::endl;
-	std::cout << t1.Serialize() << std::endl;		
+	std::cout << t1.Serialize() << std::endl;
+
+	//The next thing loads a file that uses alot of nested tags. see if its parsed correctly. if yes: yay
+	HoardXML::Document ntdoc("testread.xml");
+	std::cout << "Does the nest thing have nested tags? if yes: YAAY\n\n\n" << std::endl;
+	std::cout << ntdoc.Serialize() << std::endl;		
 }
