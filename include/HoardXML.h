@@ -176,6 +176,7 @@ public:
 			result+=data;
 		}
 		result+=std::string("</")+name+std::string(">\n");
+		return result;
 	}
 	
 	//operator: []
