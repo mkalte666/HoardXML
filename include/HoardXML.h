@@ -229,13 +229,14 @@ public:
 				AddChild(newTag);
 				continue;
 			}
-			//this regex is generated so that it caputres the content between <name>[content]</name>
-			std::regex thisTagRegex(std::string("(")+m[1].str()+std::string(")([\\w\\W]*)(<\\s*\\/\\s*")+newTag.GetName()+std::string("\\s*>)"));
-			std::smatch m2;
+	
+			
+			std::string tagContent;
+			std::string tagSuffix;
 			//Get the data inside of the tag. dont panic if we cant find an end tag. if we cant, it will be handeld as a tag without content.
-			if(std::regex_search(toParse, m2, thisTagRegex)) {
-				newTag.Load(m2[2]);
-				toParse = m2.prefix().str()+m2.suffix().str();
+			if(_TagContent(newTag.GetName(), m[1].suffix().str(), tagContent, tagSuffix)) {
+				newTag.Load(tagContent);
+				toParse = m.prefix().str()+tagSuffix;
 			} else {
 				toParse = m.prefix().str()+m.suffix().str();
 			}
@@ -246,7 +247,32 @@ public:
 	}
 
 protected:
-
+	
+	bool _TagContent(std::string name, std::string inSuffix, std::string&outContent, std::string&outSuffix) 
+	{
+		int tagCount=1;
+		std::regex thisTagRE(std::string("<\\s*/*\\s*")+name+std::string("\\s*[^<&>]*>"));
+		std::regex isEndTagRE(std::string("<\\s*/\\s*")+name+std::string("\\s*>"));
+		std::smatch m;
+		while(std::regex_search(inSuffix,m,thisTagRE)) {
+			//fond a tag. increase tagCount by 1 if its a opening tag, decrese otherwise
+			std::smatch m2;
+			if(std::regex_search(m[0],m2,isEndTagRE)) {
+				tagCount--;
+			} 
+			else {
+				tagCount++;
+			}
+			if(tagCount<=0) {
+				outContent = m.prefix().str();
+				outSuffix = m.suffix().str();
+				return true;
+			}
+		}
+		return false;
+	}
+	
+	
 	//function: _ParseTag
 	//note: Parses a tag, meaning the "<tagfoo>"-sequence to extract attributes
 	//param:	toParse: the data to  parse 	
