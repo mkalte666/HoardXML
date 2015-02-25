@@ -128,7 +128,7 @@ public:
 		}
 	}
 
-	//function: GetSingleTag
+	//function: GetEmptyTag
 	//note: Returns if this tag is stand-alone without data and children 
 	bool GetEmptyTag() 
 	{
@@ -223,7 +223,7 @@ public:
 				continue;
 			}
 			//its a tag without content? add as child, remove and handle next
-			if(newTag.GetSingleTag()) {
+			if(newTag.GetEmptyTag()) {
 				toParse = m.prefix().str()+m.suffix().str();
 				AddChild(newTag);
 				continue;
