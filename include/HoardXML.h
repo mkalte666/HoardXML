@@ -248,6 +248,14 @@ public:
 
 protected:
 	
+	//function _TagContent
+	//note: This function makes shure that the content between the tag-boundries is parsed right.
+	//		Its also responsible for avoiding problems with nested tags.
+	//		Returns TRUE if could parse content, false otherwise
+	//param:	name: name of the just opend tag
+	//			inSuffix: rest of file (!) after the opening tag
+	//		OUT outContent: The content between the tags, emptystring if no end-tag found
+	//		OUT outSuffix: The string behind the end-tag. undefiened if not found.
 	bool _TagContent(std::string name, std::string inSuffix, std::string&outContent, std::string&outSuffix) 
 	{
 		int tagCount=1;
@@ -269,6 +277,7 @@ protected:
 				outSuffix = m.suffix().str();
 				return true;
 			}
+			dumped += m.prefix().str()+m[0].str();
 			inSuffix = m.suffix().str();
 		}
 		return false;
