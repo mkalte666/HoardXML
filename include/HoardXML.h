@@ -290,7 +290,7 @@ protected:
 	static Tag _ParseTag(std::string toParse)
 	{
 		static std::regex tagRE("<\\s*([\\w-]*)\\s*([^<&>]*)>");
-		static std::regex attributeRE("([\\w-]*)=\"([^<&>=\"]*)\"");
+		static std::regex attributeRE("([\\w-]*)=\"([^<&>\"]*)\"");
 		static std::regex noContentRE("(/)");
 		std::smatch m;
 		if(std::regex_search(toParse,m,tagRE)) {
