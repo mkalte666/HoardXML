@@ -188,7 +188,7 @@ public:
 	std::vector<Tag*> operator[](std::string tagName)  
 	{
 		std::vector<Tag*> resultlist;
-		std::regex nameRE("[.]?([\\w\\d]+)([\\w\\d.]*)");
+		static std::regex nameRE("[.]?([\\w\\d]+)([\\w\\d.]*)");
 		std::smatch m;
 		if(std::regex_search(tagName, m, nameRE)) {
 			if(m[1]!="") {
@@ -259,18 +259,23 @@ protected:
 	bool _TagContent(std::string name, std::string inSuffix, std::string&outContent, std::string&outSuffix) 
 	{
 		int tagCount=1;
-		std::regex thisTagRE(std::string("<\\s*/*\\s*")+name+std::string("\\s*[^<&>]*>"));
-		std::regex isEndTagRE(std::string("<\\s*/\\s*")+name+std::string("\\s*>"));
+		static std::regex tagRE("<\\s*/*([\\w-]*)\\s*([^<&>]*)>");
+		static std::regex endTagTagRE("<\\s*/+([\\w-]*)\\s*([^<&>]*)>");
 		std::smatch m;
 		std::string dumped;
-		while(std::regex_search(inSuffix,m,thisTagRE)) {
+		while (std::regex_search(inSuffix, m, tagRE)) {
 			//fond a tag. increase tagCount by 1 if its a opening tag, decrese otherwise
-			std::smatch m2;
-			if(std::regex_search(m[0].str(),m2,isEndTagRE)) {
-				tagCount--;
-			} 
-			else {
-				tagCount++;
+			if (m[1].str() == name) {
+				std::smatch m2;
+				std::string tagString = m[0].str();
+				if (std::regex_search(tagString, m2, endTagTagRE)) {
+					if (m2[1].str() == name) {
+						tagCount--;
+					}
+				}
+				else {
+					tagCount++;
+				}
 			}
 			if(tagCount<=0) {
 				outContent = dumped+m.prefix().str();
@@ -408,7 +413,7 @@ public:
 	{
 		std::string result;
 		for (Tag t : GetChildren()) {
-			result+=t.Serialize();
+			result += t.Serialize(depth+1);
 		}
 		return result;
 	}
