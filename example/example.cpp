@@ -3,65 +3,41 @@
 
 #include <string>
 #include <iostream>
+#include <chrono>
 
 #include "../include/HoardXML.h"
-
+using namespace std;
+using namespace std::chrono;
 //function: main
 //note: contains the examples how to use the library. 
 int main(int argc, char**argv)
 {
+	
 	//At first we want to create a single tag
 	//Output its serialization to see what it does. 
 	HoardXML::Tag t1("test");
 	t1.SetAttribute("testattribute", "cant touch this");
 	t1.SetData("Hello World!");
-	std::cout << t1.Serialize() << std::endl;
-
-	//Next thing is: lets add a child to the tag t1, give it some values and output it again!
-	std::cout << "--------------------------------" << std::endl;
-	HoardXML::Tag t2("moartest");
-	t2.SetData("I can do more layers!");
-	t2.SetAttribute("a", "I am an attribute");
-	t1.AddChild(t2);
-	std::cout << t1.Serialize() << std::endl;
-
-	//since t2 is now part of t1, we cann access it via [].
-	//only problem is that it returns a vector, so we need the first element 
-	std::vector<HoardXML::Tag*> ts = t1["moartest"];
-	std::cout << "content of t2: " << ts[0]->GetData() << std::endl;
-
-	//we also can append stuff to these retured things, since we have pointers to them 
-	HoardXML::Tag t3("foo");
-	ts[0]->AddChild(t3);
-	std::cout << "fooooo" << std::endl;
-	//now we can do that: 
-	t1["moartest.foo"][0]->SetData("woop!");
-	
-	//print it to see it
-	std::cout << t1.Serialize();
-
-	//lets add all this to a Document and save it. 
-	HoardXML::Document d;
-	d.AddChild(t1);
-	d.Save("test.xml");
-
-	//and because we can, lets load it into another Document
-	std::cout << "\n\n\n"; 
-	HoardXML::Document d2("test.xml");
-	std::cout << "______________________________________" << std::endl;
-	std::cout << d2.Serialize() << std::endl;
-
-	//the rest here basically is stuff you can see above, used for testing
-
-	HoardXML::Tag t4("single");
-	t4.SetEmptyTag(true);
-	t4.SetAttribute("morning", "true");
-	t1.AddChild(t4);
-	std::cout << "_-_-_-_-_-_-_-_-__-_-_-_----_--_-" << std::endl;
-	std::cout << t1.Serialize() << std::endl;
-
-	//The next thing loads a file that uses alot of nested tags. see if its parsed correctly. if yes: yay
-	HoardXML::Document ntdoc("testread.xml");
-	std::cout << "Does the nest thing have nested tags? if yes: YAAY\n\n\n" << std::endl;
-	std::cout << ntdoc.Serialize() << std::endl;		
+	for(int i=0;i<100;i++) {
+		HoardXML::Tag t2("test2");
+		t2.SetData("DAM DA DA DAM");
+		for(int j=0;j<20;j++) {
+			HoardXML::Tag t3("test2");
+			t3.SetEmptyTag(true);
+			if(j%5==0) {
+				t3.SetAttribute("blub", "fish");
+			}
+			t2.AddChild(t3);
+		}
+		t1.AddChild(t2);
+	}
+	HoardXML::Document blub;
+	blub.AddChild(t1);
+	blub.Save("test.xml");
+	std::chrono::high_resolution_clock::time_point curtime = std::chrono::high_resolution_clock::now();
+	HoardXML::Document blubLoad("test.xml");
+	std::chrono::high_resolution_clock::time_point newTime = std::chrono::high_resolution_clock::now();
+	auto timeLeft=std::chrono::duration_cast<std::chrono::duration<double>>(newTime-curtime).count();
+	std::cout << "took me: " << timeLeft << std::endl;
+	blubLoad.Save("test2.xml");
 }
